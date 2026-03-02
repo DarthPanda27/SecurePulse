@@ -2,6 +2,7 @@ import express from "express";
 import type { PrismaClient } from "@prisma/client";
 import { scoreIntelForUser, type UserContext } from "./lib/personalization";
 import { INTEL_SEVERITIES, type IntelSeverity } from "./lib/severity";
+import { GeminiDailyBriefService } from "./lib/briefing";
 
 const severityOrder: Record<IntelSeverity, number> = {
   LOW: 0,
@@ -115,6 +116,7 @@ async function loadUserContext(db: DbClient, subscriberKey: string): Promise<Use
 
 export function createApp(db: DbClient) {
   const app = express();
+  const dailyBriefService = new GeminiDailyBriefService();
   app.use(express.json());
 
   app.get("/api/health", (_req, res) => {
@@ -165,6 +167,33 @@ export function createApp(db: DbClient) {
       .sort((a, b) => b.score - a.score || b.publishedAt.getTime() - a.publishedAt.getTime());
 
     return res.json({ context, items: scored });
+  });
+
+  app.get("/api/users/:subscriberKey/daily-brief", async (req, res) => {
+    if (!isNonEmptyString(req.params.subscriberKey)) {
+      return res.status(400).json({ error: "invalid subscriberKey" });
+    }
+
+    const rows = await db.intelItem.findMany({
+      include: {
+        feedSource: true,
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 20,
+    });
+
+    const brief = await dailyBriefService.generateDailyBrief(
+      rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        summary: row.summary,
+        severity: row.severity,
+        sourceUrl: row.sourceUrl,
+        publishedAt: row.publishedAt,
+      })),
+    );
+
+    return res.json(brief);
   });
 
   app.get("/api/subscriptions", async (req, res) => {
