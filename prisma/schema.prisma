@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FeedType {
+  RSS
+  API
+  VENDOR_ADVISORY
+  NVD
+  CISA_KEV
+  EPSS
+  BLOG
+}
+
+enum IntelKind {
+  CVE
+  ADVISORY
+  CAMPAIGN
+  THREAT
+}
+
+model FeedSource {
+  id              String    @id @default(cuid())
+  name            String
+  type            FeedType
+  url             String?
+  isEnabled       Boolean   @default(true)
+  trustScore      Float     @default(0.5)
+  pollIntervalMin Int       @default(60)
+  lastSuccessAt   DateTime?
+  lastErrorAt     DateTime?
+  lastError       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  intelItems      IntelItem[]
+
+  @@index([type, isEnabled])
+}
+
+model IntelItem {
+  id                String    @id @default(cuid())
+  sourceId          String
+  source            FeedSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  kind              IntelKind
+  title             String
+  summary           String?
+  sourceUrl         String
+  sourcePublishedAt DateTime?
+  normalizedHash    String    @unique
+  confidenceRaw     Float     @default(0.5)
+  cvss              Float?
+  epss              Float?
+  kev               Boolean   @default(false)
+  exploitObserved   Boolean   @default(false)
+  metadata          Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  vulnerabilities   Vulnerability[]
+  briefCards        BriefCard[]
+
+  @@index([kind, sourcePublishedAt])
+  @@index([sourceId, sourcePublishedAt])
+}
+
+model Vulnerability {
+  id             String    @id @default(cuid())
+  cveId          String    @unique
+  cvssScore      Float?
+  epssScore      Float?
+  kevFlag        Boolean   @default(false)
+  exploitStatus  String?
+  publishedAt    DateTime?
+  modifiedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  intelItems     IntelItem[]
+
+  @@index([kevFlag, epssScore])
+}
+
+model DailyBrief {
+  id             String     @id @default(cuid())
+  userId         String
+  briefDate      DateTime
+  tldr           String?
+  generatedAt    DateTime   @default(now())
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  cards          BriefCard[]
+
+  @@unique([userId, briefDate])
+  @@index([briefDate])
+}
+
+model BriefCard {
+  id              String     @id @default(cuid())
+  dailyBriefId    String
+  dailyBrief      DailyBrief @relation(fields: [dailyBriefId], references: [id], onDelete: Cascade)
+  intelItemId     String?
+  intelItem       IntelItem? @relation(fields: [intelItemId], references: [id], onDelete: SetNull)
+  cardType        String
+  title           String
+  bullets         Json
+  whyItMatters    String
+  suggestedAction String?
+  confidence      Float
+  sourceLinks     Json
+  score           Float?
+  orderIndex      Int
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([dailyBriefId, orderIndex])
+  @@index([intelItemId])
+}
+
+model Subscription {
+  id                 String   @id @default(cuid())
+  userId             String
+  vendor             String?
+  product            String?
+  category           String?
+  keyword            String?
+  feedSourceId       String?
+  feedSource         FeedSource? @relation(fields: [feedSourceId], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+  @@index([feedSourceId])
+}
+
+model UserPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  topics          Json?
+  sectors         Json?
+  geos            Json?
+  severityMin     Float?   @default(0.5)
+  deliveryHourUtc Int?     @default(7)
+  channels        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([deliveryHourUtc])
+}
