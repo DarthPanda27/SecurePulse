@@ -12,6 +12,12 @@
 2. Set `GEMINI_API_KEY` in `.env.local`
 3. Start the app: `npm run dev`
 
+## SQLite relational integrity in local dev
+
+- SecurePulse enables `PRAGMA foreign_keys = ON` during SQLite initialization.
+- App startup asserts this setting remains enabled and logs: `[startup] SQLite foreign key enforcement confirmed active.`
+- If SQLite cannot enforce foreign keys, startup fails fast to avoid accepting inconsistent relational data.
+
 ## Secret handling policy
 
 - `GEMINI_API_KEY` is **server-only** and must never be injected into Vite client bundles.

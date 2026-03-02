@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { MissingGeminiKeyError, generateBriefCard } from "./server/lib/ai.ts";
 import { BriefCard, IntelItem } from "./server/lib/models.ts";
 import { parseGenerateBriefRequest, parseIntelItem, ParseFailureError } from "./server/lib/parse.ts";
+import db from "./src/lib/db.ts";
 
 dotenv.config();
 
@@ -44,6 +45,12 @@ function formatLegacyBriefResponse(brief: BriefCard): BriefCard & { summaryBulle
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  const foreignKeyStatus = db.pragma("foreign_keys", { simple: true });
+  if (foreignKeyStatus !== 1) {
+    throw new Error("SQLite foreign key enforcement is not active at startup.");
+  }
+  console.log("[startup] SQLite foreign key enforcement confirmed active.");
 
   app.use(express.json());
 
