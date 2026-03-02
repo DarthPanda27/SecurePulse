@@ -151,20 +151,16 @@ async function startServer() {
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: {middlewareMode: true},
-      appType: 'spa',
+      server: { middlewareMode: true },
+      appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static('dist'));
+    // In production, serve the built static files
+    app.use(express.static("dist"));
   }
 
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error(err);
-    res.status(500).json({error: 'Internal server error'});
-  });
-
-  app.listen(PORT, '0.0.0.0', () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 
