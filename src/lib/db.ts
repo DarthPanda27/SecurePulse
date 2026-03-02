@@ -11,6 +11,9 @@ if (!fs.existsSync(dataDir)) {
 const dbPath = path.join(dataDir, 'securepulse.db');
 const db = new Database(dbPath);
 
+// Enforce referential integrity — SQLite disables FK checks by default
+db.pragma('foreign_keys = ON');
+
 // Initialize schema
 db.exec(`
   CREATE TABLE IF NOT EXISTS intel_items (
