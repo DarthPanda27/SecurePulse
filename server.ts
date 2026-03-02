@@ -1,25 +1,19 @@
-import express from "express";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { createIngestionService } from "./server/lib/ingestion/index";
 import prisma from "./server/lib/prisma";
+import express from "express";
+import { createApp } from "./server/app";
 
 dotenv.config();
 
 async function startServer() {
-  const app = express();
+  const app = createApp(prisma as any);
   const PORT = 3000;
-
-  app.use(express.json());
-
-  // API routes go here
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", app: "SecurePulse MVP" });
-  });
 
   const ingestionService = createIngestionService();
 
-  app.post("/api/ingest/run", async (req, res) => {
+  app.post("/api/ingest/run", async (_req, res) => {
     try {
       await ingestionService.ingestAll();
       res.json({ status: "ok" });
@@ -33,13 +27,11 @@ async function startServer() {
     res.json({ replayed });
   });
 
-  app.get("/api/ingest/dlq", async (req, res) => {
+  app.get("/api/ingest/dlq", async (_req, res) => {
     const rows = await (prisma as any).deadLetterItem.findMany({ where: { replayedAt: null }, orderBy: { createdAt: "asc" } });
     res.json(rows);
   });
 
-
-  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -47,7 +39,6 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    // In production, serve the built static files
     app.use(express.static("dist"));
   }
 
