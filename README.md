@@ -2,19 +2,27 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# SecurePulse
 
-This contains everything you need to run your app locally.
+## Run locally
 
-View your app in AI Studio: https://ai.studio/apps/4b6313b6-c020-47c9-898b-1a4e286045b6
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js + PostgreSQL
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Copy envs:
+   `cp .env.example .env.local`
+3. Set `GEMINI_API_KEY` and `DATABASE_URL` in `.env.local`.
+4. Generate Prisma client:
+   `npm run db:generate`
+5. Apply migration:
+   `npm run db:migrate`
+6. Seed representative records:
+   `npm run db:seed`
+7. Start app:
    `npm run dev`
+
+## Prisma checks
+
+- Validate schema: `npx prisma validate`
+- Check migration status: `npx prisma migrate status`
