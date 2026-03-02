@@ -34,6 +34,9 @@ model FeedSource {
   baseUrl       String?
   isActive      Boolean        @default(true)
   pollingMins   Int            @default(60)
+  lastSuccessAt DateTime?      @db.Timestamptz(6)
+  lastErrorAt   DateTime?      @db.Timestamptz(6)
+  errorStreak   Int            @default(0)
   createdAt     DateTime       @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
   intelItems    IntelItem[]
@@ -138,4 +141,18 @@ model UserPreference {
   subscription          Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([minimumSeverity, digestHourUtc])
+}
+
+
+model DeadLetterItem {
+  id           String   @id @default(cuid())
+  sourceSlug   String
+  stage        String
+  payload      Json
+  errorMessage String
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  replayedAt   DateTime? @db.Timestamptz(6)
+
+  @@index([sourceSlug, replayedAt])
+  @@index([createdAt])
 }
