@@ -7,6 +7,14 @@ import {generateBriefCard} from './src/lib/ai.ts';
 
 dotenv.config();
 
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error(
+    'Missing required environment variable: GEMINI_API_KEY\n' +
+    'Please set GEMINI_API_KEY in your .env file or in the process environment before starting the server.\n' +
+    'Example: GEMINI_API_KEY=your-api-key-here'
+  );
+}
+
 type DailyBriefRow = {id: string; date: string; created_at: string};
 type BriefCardRow = {
   id: string;
