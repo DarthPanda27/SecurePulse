@@ -1,4 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { parseBriefCard, safeJsonParse } from "./parse.ts";
+import { BriefCard, GeminiModelId, GEMINI_MODELS, IntelItem } from "./models.ts";
 
 export class MissingGeminiKeyError extends Error {
   constructor() {
@@ -41,7 +43,10 @@ export const BriefCardSchema = {
   required: ["title", "bullets", "whyItMatters", "suggestedAction", "confidence", "sources"],
 };
 
-export async function generateBriefCard(intelItems: unknown[]) {
+export async function generateBriefCard(
+  intelItems: IntelItem[],
+  model: GeminiModelId = GEMINI_MODELS.BRIEF_GENERATION,
+): Promise<BriefCard> {
   const genAI = getGenAI();
 
   const prompt = `
@@ -60,7 +65,7 @@ export async function generateBriefCard(intelItems: unknown[]) {
   `;
 
   const response = await genAI.models.generateContent({
-    model: "gemini-2.5-flash",
+    model,
     contents: prompt,
     config: {
       temperature: 0.1,
@@ -69,5 +74,6 @@ export async function generateBriefCard(intelItems: unknown[]) {
     },
   });
 
-  return JSON.parse(response.text || "{}");
+  const parsed = safeJsonParse(response.text || "{}", "Gemini brief response");
+  return parseBriefCard(parsed);
 }
