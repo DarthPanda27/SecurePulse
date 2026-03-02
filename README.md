@@ -32,3 +32,13 @@
 - Build app: `npm run build`
 - Scan built assets for secret patterns: `npm run scan:bundle-secrets`
 - Type/lint check: `npm run lint`
+
+## Language fit: why this repo uses TypeScript
+
+For SecurePulse's current architecture, TypeScript is a strong default because:
+
+- The frontend and backend are both JavaScript-runtime based (React + Express), so one language can be used end-to-end.
+- Shared request/response and domain types reduce runtime mismatch risk between UI and API layers.
+- Existing tooling in this repo (`tsx`, `tsc`, Vite) is already optimized for TypeScript workflows.
+
+TypeScript is not universally "best" for every app. If SecurePulse evolves toward heavy data science pipelines, low-latency systems programming, or strict formal verification constraints, introducing additional languages in those subsystems could be a better fit.
