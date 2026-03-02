@@ -21,14 +21,6 @@
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "types": [
-      "node",
-      "vite/client"
-    ]
-  },
-  "exclude": [
-    "src/lib/**",
-    "src/**/*.test.ts"
-  ]
+    "noEmit": true
+  }
 }
