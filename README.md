@@ -2,19 +2,27 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# SecurePulse
 
-This contains everything you need to run your app locally.
+## Run locally
 
-View your app in AI Studio: https://ai.studio/apps/4b6313b6-c020-47c9-898b-1a4e286045b6
+**Prerequisites:** Node.js
 
-## Run Locally
+1. Install dependencies: `npm install`
+2. Set `GEMINI_API_KEY` in `.env.local`
+3. Start the app: `npm run dev`
 
-**Prerequisites:**  Node.js
+## Secret handling policy
 
+- `GEMINI_API_KEY` is **server-only** and must never be injected into Vite client bundles.
+- Frontend code must never call Gemini SDKs or Gemini endpoints directly.
+- All Gemini interactions must occur in backend code paths (Express API routes under `server.ts` + `server/lib/*`).
+- Browser code may call only internal backend endpoints (for example `/api/brief`).
+- Build artifacts must be scanned in CI/dev with `npm run scan:bundle-secrets` to detect accidental leaks.
+- If `GEMINI_API_KEY` is missing, `/api/brief` returns `503 GEMINI_NOT_CONFIGURED` (expected fail-safe behavior, not a browser-side secret leak).
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Security validation commands
+
+- Build app: `npm run build`
+- Scan built assets for secret patterns: `npm run scan:bundle-secrets`
+- Type/lint check: `npm run lint`

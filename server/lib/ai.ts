@@ -1,7 +1,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import dotenv from "dotenv";
 
-dotenv.config();
+export class MissingGeminiKeyError extends Error {
+  constructor() {
+    super("GEMINI_API_KEY environment variable is required");
+    this.name = "MissingGeminiKeyError";
+  }
+}
 
 let ai: GoogleGenAI | null = null;
 
@@ -9,7 +13,7 @@ export function getGenAI(): GoogleGenAI {
   if (!ai) {
     const key = process.env.GEMINI_API_KEY;
     if (!key) {
-      throw new Error("GEMINI_API_KEY environment variable is required");
+      throw new MissingGeminiKeyError();
     }
     ai = new GoogleGenAI({ apiKey: key });
   }
@@ -32,27 +36,27 @@ export const BriefCardSchema = {
   required: ["title", "summaryBullets", "whyItMatters", "confidence"],
 };
 
-export async function generateBriefCard(intelItems: any[]) {
+export async function generateBriefCard(intelItems: unknown[]) {
   const genAI = getGenAI();
-  
+
   const prompt = `
     You are a senior cybersecurity intelligence analyst.
     Review the following raw intelligence items and generate a single, high-signal daily brief card.
-    
+
     Rules:
     1. Do NOT hallucinate CVEs, threat actors, or facts not present in the input.
     2. Write in a concise, professional tone.
     3. If there are multiple items, synthesize them into a coherent narrative.
-    
+
     Raw Intelligence:
     ${JSON.stringify(intelItems, null, 2)}
   `;
 
   const response = await genAI.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.5-flash",
     contents: prompt,
     config: {
-      temperature: 0.1, // Low temperature for factual grounding
+      temperature: 0.1,
       responseMimeType: "application/json",
       responseSchema: BriefCardSchema,
     },

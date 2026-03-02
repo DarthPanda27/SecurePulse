@@ -9,7 +9,9 @@
     "start": "node server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "scan:bundle-secrets": "node scripts/scan-bundle-secrets.mjs",
+    "verify:secrets": "npm run build && npm run scan:bundle-secrets"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
