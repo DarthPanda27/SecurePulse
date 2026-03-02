@@ -12,7 +12,9 @@
     "lint": "tsc --noEmit",
     "scan:bundle-secrets": "node scripts/scan-bundle-secrets.mjs",
     "verify:secrets": "npm run build && npm run scan:bundle-secrets",
-    "test": "node --import tsx --test server/lib/__tests__/*.test.ts"
+    "test": "node --import tsx --test server/lib/__tests__/*.test.ts",
+    "check:baseline:api": "node scripts/baseline-regression.mjs",
+    "check:baseline": "npm run build && npm run scan:bundle-secrets && npm run check:baseline:api"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
