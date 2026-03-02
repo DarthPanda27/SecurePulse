@@ -1,0 +1,5 @@
+{
+  "name": "SecurePulse",
+  "description": "A cybersecurity intelligence PWA that generates personalized daily briefs and threat intel cards.",
+  "requestFramePermissions": []
+}
