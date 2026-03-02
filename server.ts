@@ -1,16 +1,13 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
-import { z } from "zod";
 import { MissingGeminiKeyError, generateBriefCard } from "./server/lib/ai.ts";
+import { BriefCard, IntelItem } from "./server/lib/models.ts";
+import { parseGenerateBriefRequest, parseIntelItem, ParseFailureError } from "./server/lib/parse.ts";
 
 dotenv.config();
 
-const generateBriefRequestSchema = z.object({
-  intelItems: z.array(z.unknown()).min(1, "intelItems must contain at least one item"),
-});
-
-const defaultIntel = [
+const defaultIntel: IntelItem[] = [
   {
     source: "CISA KEV",
     severity: "CRITICAL",
@@ -37,10 +34,10 @@ function respondServerError(
   });
 }
 
-function formatLegacyBriefResponse(brief: Record<string, unknown>) {
+function formatLegacyBriefResponse(brief: BriefCard): BriefCard & { summaryBullets: string[] } {
   return {
     ...brief,
-    summaryBullets: Array.isArray(brief.bullets) ? brief.bullets : [],
+    summaryBullets: brief.bullets,
   };
 }
 
@@ -59,21 +56,21 @@ async function startServer() {
   });
 
   app.post("/api/generate-brief", async (req, res) => {
-    const parsedBody = generateBriefRequestSchema.safeParse(req.body);
-    if (parsedBody.success === false) {
-      return res.status(400).json({
-        error: {
-          code: "INVALID_REQUEST",
-          message: "Invalid request payload",
-          details: parsedBody.error.issues,
-        },
-      });
-    }
-
     try {
-      const brief = await generateBriefCard(parsedBody.data.intelItems);
+      const parsedBody = parseGenerateBriefRequest(req.body);
+      const brief = await generateBriefCard(parsedBody.intelItems);
       return res.json(brief);
     } catch (error) {
+      if (error instanceof ParseFailureError) {
+        return res.status(400).json({
+          error: {
+            code: "INVALID_REQUEST",
+            message: "Invalid request payload",
+            details: error.message,
+          },
+        });
+      }
+
       if (error instanceof MissingGeminiKeyError) {
         return respondServerError(res, {
           status: 503,
@@ -95,11 +92,21 @@ async function startServer() {
   app.post("/api/brief", async (req, res) => {
     try {
       const intelItems = Array.isArray(req.body?.intelItems) && req.body.intelItems.length > 0
-        ? req.body.intelItems
+        ? req.body.intelItems.map((item: unknown, idx: number) => parseIntelItem(item, `legacyBriefRequest.intelItems[${idx}]`))
         : defaultIntel;
       const brief = await generateBriefCard(intelItems);
-      return res.json({ brief: formatLegacyBriefResponse(brief as Record<string, unknown>) });
+      return res.json({ brief: formatLegacyBriefResponse(brief) });
     } catch (error) {
+      if (error instanceof ParseFailureError) {
+        return res.status(400).json({
+          error: {
+            code: "INVALID_REQUEST",
+            message: "Invalid request payload",
+            details: error.message,
+          },
+        });
+      }
+
       if (error instanceof MissingGeminiKeyError) {
         return respondServerError(res, {
           status: 503,
