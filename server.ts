@@ -1,14 +1,21 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
-import { createApp } from "./src/backend/app";
 
 dotenv.config();
 
-export async function startServer() {
-  const app = createApp();
+async function startServer() {
+  const app = express();
   const PORT = 3000;
 
+  app.use(express.json());
+
+  // API routes go here
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", app: "SecurePulse MVP" });
+  });
+
+  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -16,6 +23,7 @@ export async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
+    // In production, serve the built static files
     app.use(express.static("dist"));
   }
 

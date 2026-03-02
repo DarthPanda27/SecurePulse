@@ -41,17 +41,6 @@ db.exec(`
     confidence TEXT NOT NULL,
     FOREIGN KEY(brief_id) REFERENCES daily_briefs(id)
   );
-
-  CREATE TABLE IF NOT EXISTS audit_logs (
-    id TEXT PRIMARY KEY,
-    operation TEXT NOT NULL,
-    entity TEXT NOT NULL,
-    entity_id TEXT NOT NULL,
-    actor TEXT NOT NULL,
-    metadata TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
 `);
 
 export default db;
