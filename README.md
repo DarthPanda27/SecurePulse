@@ -32,3 +32,9 @@
 - Build app: `npm run build`
 - Scan built assets for secret patterns: `npm run scan:bundle-secrets`
 - Type/lint check: `npm run lint`
+
+## Baseline regression suite
+
+- Run all baseline QA checks with one command: `npm run check:baseline`
+- This command verifies build success, scans dist bundles for secret leakage, and validates the `/api/health` + `/api/generate-brief` API contracts (success and invalid-body 400 path).
+- API baseline checks run with a deterministic mocked brief response via `SECUREPULSE_MOCK_BRIEF_CARD`, so they are reliable locally without external Gemini access.

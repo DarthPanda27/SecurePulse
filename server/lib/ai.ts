@@ -22,6 +22,17 @@ export function getGenAI(): GoogleGenAI {
   return ai;
 }
 
+
+function getMockBriefCardFromEnv(): BriefCard | null {
+  const raw = process.env.SECUREPULSE_MOCK_BRIEF_CARD;
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = safeJsonParse(raw, "SECUREPULSE_MOCK_BRIEF_CARD");
+  return parseBriefCard(parsed);
+}
+
 export const BriefCardSchema = {
   type: Type.OBJECT,
   properties: {
@@ -47,6 +58,11 @@ export async function generateBriefCard(
   intelItems: IntelItem[],
   model: GeminiModelId = GEMINI_MODELS.BRIEF_GENERATION,
 ): Promise<BriefCard> {
+  const mocked = getMockBriefCardFromEnv();
+  if (mocked) {
+    return mocked;
+  }
+
   const genAI = getGenAI();
 
   const prompt = `
