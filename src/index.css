@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* Enable class-based dark mode — applies to .dark and all its descendants */
+@custom-variant dark (&:is(.dark, .dark *));
+
+/* Smooth 300ms color transitions on every element for polished theme switching */
+*, *::before, *::after {
+  transition: background-color 300ms ease, border-color 300ms ease,
+              color 300ms ease, box-shadow 300ms ease;
+}
+
+/* Shield logo indigo pulse — active only in dark mode */
+@keyframes shield-pulse {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(99, 102, 241, 0.35); }
+  50%       { box-shadow: 0 0 16px 5px rgba(99, 102, 241, 0.65); }
+}
+
+.dark .shield-logo {
+  animation: shield-pulse 2.5s ease-in-out infinite;
+}
