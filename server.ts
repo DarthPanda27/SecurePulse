@@ -105,6 +105,28 @@ async function startServer() {
     res.json({status: 'ok', app: 'SecurePulse MVP'});
   });
 
+  app.get('/api/subscriptions', (req: Request, res: Response) => {
+    const rows = db.prepare('SELECT keyword FROM subscriptions ORDER BY created_at ASC').all() as { keyword: string }[];
+    res.json({ keywords: rows.map(r => r.keyword) });
+  });
+
+  app.post('/api/subscriptions', (req: Request, res: Response) => {
+    const { keyword } = req.body as { keyword?: string };
+    if (!keyword || typeof keyword !== 'string' || !keyword.trim()) {
+      res.status(400).json({ error: 'keyword is required' });
+      return;
+    }
+    const trimmed = keyword.trim();
+    db.prepare('INSERT OR IGNORE INTO subscriptions (keyword) VALUES (?)').run(trimmed);
+    res.status(201).json({ keyword: trimmed });
+  });
+
+  app.delete('/api/subscriptions/:keyword', (req: Request, res: Response) => {
+    const { keyword } = req.params;
+    db.prepare('DELETE FROM subscriptions WHERE keyword = ?').run(keyword);
+    res.status(204).send();
+  });
+
   app.get('/api/daily-briefs/latest', (req: Request, res: Response, next: NextFunction) => {
     try {
       const brief = db

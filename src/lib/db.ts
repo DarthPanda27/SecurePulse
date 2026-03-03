@@ -41,6 +41,11 @@ db.exec(`
     confidence TEXT NOT NULL,
     FOREIGN KEY(brief_id) REFERENCES daily_briefs(id)
   );
+
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    keyword TEXT PRIMARY KEY,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 export default db;
